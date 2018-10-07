@@ -32,12 +32,23 @@ QVariant ImageListModel::data( const QModelIndex& index, int role ) const
 {
     if( !index.isValid() ) return QVariant();
 
-    if( role == Qt::DisplayRole )
+    auto image = images.at( index.row() );
+    switch( role )
     {
-        return *images.at( index.row() );
+        case Qt::DisplayRole :
+        {
+            return image.first ? *image.first : QImage();
+        }
+        case Qt::DecorationRole :
+        {
+            if( image.second ) return image.second.value();
+            else [[ fallthrough ]];
+        }
+        default:
+        {
+            return QVariant();
+        }
     }
-
-    return QVariant();
 }
 
 void ImageListModel::updateRow( int rowIndex )
@@ -50,6 +61,20 @@ void ImageListModel::addImage( std::shared_ptr< QImage > image )
 {
     beginInsertRows( QModelIndex(),
                      images.size(), images.size() );
-    images.push_back( image );
+    images.push_back( std::make_pair( image, std::nullopt ) );
     endInsertRows();
+}
+
+void ImageListModel::addImage( std::shared_ptr< QImage > image, const QString& mark )
+{
+    beginInsertRows( QModelIndex(),
+                     images.size(), images.size() );
+    images.push_back( std::make_pair( image, mark ) );
+    endInsertRows();
+}
+
+void ImageListModel::setMark( int rowIndex, const QString& mark )
+{
+    images[ rowIndex ].second = mark;
+    updateRow( rowIndex );
 }

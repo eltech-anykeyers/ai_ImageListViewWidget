@@ -5,6 +5,7 @@
 #include <QVector>
 
 #include <memory>
+#include <optional>
 
 class ImageListModel : public QAbstractListModel
 {
@@ -22,10 +23,15 @@ signals:
 
 public slots:
     void updateRow( int rowIndex );
-    void addImage( std::shared_ptr<QImage> image );
+    void addImage( std::shared_ptr< QImage > image );
+    void addImage( std::shared_ptr< QImage > image, const QString& mark );
+    void setMark( int rowIndex, const QString& mark );
 
 private:
-    QVector< std::shared_ptr< QImage > >  images;
+    using ImagePtr = std::shared_ptr< QImage >;
+    using OptMark = std::optional< QString >;
+    using MarkedImage = std::pair< ImagePtr, OptMark >;
+    QVector< MarkedImage > images;
 
 };
 
