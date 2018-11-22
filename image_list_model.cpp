@@ -23,7 +23,7 @@ ImageListModel::ImageListModel( QObject* parent )
 
 int ImageListModel::rowCount( const QModelIndex& parent ) const
 {
-    if (parent.isValid()) return 0;
+    if( parent.isValid() ) return 0;
 
     return images.size();
 }
@@ -51,6 +51,48 @@ QVariant ImageListModel::data( const QModelIndex& index, int role ) const
     }
 }
 
+QPair< QImage, QString > ImageListModel::getImage( int rowIndex ) const
+{
+    auto item = images[ rowIndex ];
+    return qMakePair( item.first  ? *item.first  : QImage(),
+                      item.second ? *item.second : QString() );
+}
+
+QVector< QPair< QImage, QString > > ImageListModel::getImages() const
+{
+    QVector< QPair< QImage, QString > > result;
+    std::transform( images.begin(), images.end(), std::back_inserter( result ),
+                    []( const MarkedImage& img ) -> QPair< QImage, QString >
+                    {
+                        return qMakePair( img.first  ? *img.first  : QImage(),
+                                          img.second ? *img.second : QString() );
+                    } );
+    return result;
+}
+
+int ImageListModel::size() const
+{
+    return images.size();
+}
+
+void ImageListModel::clear()
+{
+    if( images.empty() ) return;
+    beginRemoveRows( QModelIndex(),
+                     0, images.size() - 1 );
+    images.clear();
+    endRemoveRows();
+}
+
+void ImageListModel::removeRow( int rowIndex )
+{
+    if( rowIndex >= images.size() ) return;
+    beginRemoveRows( QModelIndex(),
+                     rowIndex, rowIndex );
+    images.remove( rowIndex );
+    endRemoveRows();
+}
+
 void ImageListModel::updateRow( int rowIndex )
 {
     emit dataChanged( this->index( rowIndex ), this->index( rowIndex),
@@ -61,7 +103,7 @@ void ImageListModel::addImage( std::shared_ptr< QImage > image )
 {
     beginInsertRows( QModelIndex(),
                      images.size(), images.size() );
-    images.push_back( std::make_pair( image, std::nullopt ) );
+    images.push_back( qMakePair( image, std::nullopt ) );
     endInsertRows();
 }
 
@@ -69,7 +111,7 @@ void ImageListModel::addImage( std::shared_ptr< QImage > image, const QString& m
 {
     beginInsertRows( QModelIndex(),
                      images.size(), images.size() );
-    images.push_back( std::make_pair( image, mark ) );
+    images.push_back( qMakePair( image, mark ) );
     endInsertRows();
 }
 
